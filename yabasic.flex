@@ -388,24 +388,24 @@ void yyerror(char *msg)
 {
   int i,j;
   
-  sprintf(string,"%s at %n",msg,&j);
+  sprintf(stringbuf,"%s at %n",msg,&j);
   if (*yytext=='\n' || *yytext=='\0') {
-    sprintf(string+j,"end of line");
+    sprintf(stringbuf+j,"end of line");
   } else {
     i=0;
-    string[j++]='\"';
+    stringbuf[j++]='\"';
     while(yytext[i]) {
-      if (isprint(yytext[i])) string[j++]=yytext[i++];
+      if (isprint(yytext[i])) stringbuf[j++]=yytext[i++];
       else {
-	sprintf(string+j,"0x%02x",yytext[i]);
+	sprintf(stringbuf+j,"0x%02x",yytext[i]);
 	j+=4;
 	break;
       }
     }
-    string[j++]='\"';
-    string[j]='\0';
+    stringbuf[j++]='\"';
+    stringbuf[j]='\0';
   }
-  error(ERROR,string);		
+  error(ERROR,stringbuf);		
   return;
 }
 
@@ -449,8 +449,8 @@ int import_lib(char *name) /* import library */
  
   include_stack_ptr++;
   if (include_stack_ptr>=MAX_INCLUDE_DEPTH) {
-    sprintf(string,"Could not import '%s': nested too deep",name);
-    error(ERROR,string);
+    sprintf(stringbuf,"Could not import '%s': nested too deep",name);
+    error(ERROR,stringbuf);
     return FALSE;
   }
 
@@ -465,19 +465,19 @@ int import_lib(char *name) /* import library */
   libfile_stack[include_stack_ptr]=new_file(full,NULL);
   libfile_chain[libfile_chain_length++]=libfile_stack[include_stack_ptr];
   if (libfile_chain_length>=MAX_INCLUDE_NUMBER) {
-    sprintf(string,"Cannot import more than %d libraries",MAX_INCLUDE_NUMBER);
-    error(ERROR,string);
+    sprintf(stringbuf,"Cannot import more than %d libraries",MAX_INCLUDE_NUMBER);
+    error(ERROR,stringbuf);
     return FALSE;
   }
   if (!libfile_stack[include_stack_ptr]) {
-    sprintf(string,"library '%s' has already been imported",full);
-    error(ERROR,string);
+    sprintf(stringbuf,"library '%s' has already been imported",full);
+    error(ERROR,stringbuf);
     return FALSE;
   } 
 
   if (infolevel>=NOTE && !is_bound) {
-    sprintf(string,"importing from file '%s'",full);
-    error(NOTE,string);
+    sprintf(stringbuf,"importing from file '%s'",full);
+    error(NOTE,stringbuf);
   }
   return TRUE;
 }
@@ -500,8 +500,8 @@ FILE *open_library(char *name,char **fullreturn,int without) /* search and open 
   if (*p) unquoted[p-name-2]='\0';
   name=unquoted;
   if (strchr(name,'.')) {
-    sprintf(string,"library name '%s' contains '.'",name);
-    error(ERROR,string);
+    sprintf(stringbuf,"library name '%s' contains '.'",name);
+    error(ERROR,stringbuf);
     return NULL;
   }
   if (!strcmp(name,"main")) {
@@ -540,8 +540,8 @@ FILE *open_library(char *name,char **fullreturn,int without) /* search and open 
     if (!without) break;
   }
 
-  sprintf(string,"couldn't open library '%s'",full);
-  error(ERROR,string);
+  sprintf(stringbuf,"couldn't open library '%s'",full);
+  error(ERROR,stringbuf);
   return NULL;
 }
 
@@ -550,8 +550,8 @@ void switchlib(void) /* switch library, called by bison */
 {
   if (include_stack_ptr<0) return;
   if (infolevel>=DEBUG) {
-    sprintf(string,"switching from '%s' to '%s'",currlib->s,libfile_stack[include_stack_ptr]->s);
-    error(DEBUG,string);
+    sprintf(stringbuf,"switching from '%s' to '%s'",currlib->s,libfile_stack[include_stack_ptr]->s);
+    error(DEBUG,stringbuf);
   }
   currlib=libfile_stack[include_stack_ptr];
   mylineno=currlib->lineno;

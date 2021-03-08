@@ -54,18 +54,18 @@ int in_loop=0;
 void report_missing(int severity,char *text) {
   if (missing_loop || missing_endif || missing_next || missing_until || missing_wend) {
     error(severity,text);
-    string[0]='\0';
+    stringbuf[0]='\0';
     if (missing_endif)
-      sprintf(string,"if statement starting at line %d has seen no 'endif' yet",missing_endif_line);
+      sprintf(stringbuf,"if statement starting at line %d has seen no 'endif' yet",missing_endif_line);
     else if (missing_next)
-      sprintf(string,"for-loop starting at line %d has seen no 'next' yet",missing_next_line);
+      sprintf(stringbuf,"for-loop starting at line %d has seen no 'next' yet",missing_next_line);
     else if (missing_wend)
-      sprintf(string,"while-loop starting at line %d has seen no 'wend' yet",missing_wend_line);
+      sprintf(stringbuf,"while-loop starting at line %d has seen no 'wend' yet",missing_wend_line);
     else if (missing_until)
-      sprintf(string,"repeat-loop starting at line %d has seen no 'until' yet",missing_until_line);
+      sprintf(stringbuf,"repeat-loop starting at line %d has seen no 'until' yet",missing_until_line);
     else if (missing_loop)
-      sprintf(string,"do-loop starting at line %d has seen no 'loop' yet",missing_wend_line);
-    if (string[0]) error(severity,string);
+      sprintf(stringbuf,"do-loop starting at line %d has seen no 'loop' yet",missing_wend_line);
+    if (stringbuf[0]) error(severity,stringbuf);
   }
 }
      
@@ -690,7 +690,7 @@ function_definition: export tSUB {missing_endsub++;missing_endsub_line=mylineno;
 	endsub {add_command(cCLEARREFS,NULL);lastcmd->nextref=firstref;add_command(cPOPSYMLIST,NULL);create_retval(ftNONE,function_type);function_type=ftNONE;add_command(cRET_FROM_FUN,NULL);lastref=NULL;create_endfunction();poplabel();}
   ;
 
-endsub: tEOPROG {if (missing_endsub) {sprintf(string,"%d end-sub(s) are missing (last at line %d)",missing_endsub,missing_endsub_line);error(ERROR,string);} YYABORT;}
+endsub: tEOPROG {if (missing_endsub) {sprintf(stringbuf,"%d end-sub(s) are missing (last at line %d)",missing_endsub,missing_endsub_line);error(ERROR,stringbuf);} YYABORT;}
   | tENDSUB {missing_endsub--;}
   ;
 
@@ -758,7 +758,7 @@ for_loop: tFOR {missing_next++;missing_next_line=mylineno;} tSYMBOL tEQU
           next next_symbol {create_break_mark(0,-1);add_command(cBREAK_HERE,NULL);}
   ;
 
-next: tEOPROG {if (missing_next) {sprintf(string,"%d next(s) are missing (last at line %d)",missing_next,missing_next_line);error(ERROR,string);} YYABORT;}
+next: tEOPROG {if (missing_next) {sprintf(stringbuf,"%d next(s) are missing (last at line %d)",missing_next,missing_next_line);error(ERROR,stringbuf);} YYABORT;}
   | tNEXT {missing_next--;}
   ;
 
@@ -803,7 +803,7 @@ do_loop: tDO {add_command(cCONTINUE_HERE,NULL);create_break_mark(0,1);missing_lo
   ;
 
 
-loop: tEOPROG {if (missing_loop) {sprintf(string,"%d loop(s) are missing (last at line %d)",missing_loop,missing_loop_line);error(ERROR,string);} YYABORT;}
+loop: tEOPROG {if (missing_loop) {sprintf(stringbuf,"%d loop(s) are missing (last at line %d)",missing_loop,missing_loop_line);error(ERROR,stringbuf);} YYABORT;}
   | tLOOP {missing_loop--;popgoto();create_break_mark(0,-1);add_command(cBREAK_HERE,NULL);}
   ;
 
@@ -815,7 +815,7 @@ while_loop: tWHILE {add_command(cCONTINUE_HERE,NULL);create_break_mark(0,1);miss
             wend
   ;	    
 
-wend: tEOPROG {if (missing_wend) {sprintf(string,"%d wend(s) are missing (last at line %d)",missing_wend,missing_wend_line);error(ERROR,string);} YYABORT;}
+wend: tEOPROG {if (missing_wend) {sprintf(stringbuf,"%d wend(s) are missing (last at line %d)",missing_wend,missing_wend_line);error(ERROR,stringbuf);} YYABORT;}
   | tWEND {missing_wend--;swap();popgoto();poplabel();create_break_mark(0,-1);add_command(cBREAK_HERE,NULL);}
   ;
 
@@ -825,7 +825,7 @@ repeat_loop: tREPEAT {add_command(cCONTINUE_HERE,NULL);create_break_mark(0,1);mi
 	     until
   ;
 
-until: tEOPROG {if (missing_until) {sprintf(string,"%d until(s) are missing (last at line %d)",missing_until,missing_until_line);error(ERROR,string);} YYABORT;}
+until: tEOPROG {if (missing_until) {sprintf(stringbuf,"%d until(s) are missing (last at line %d)",missing_until,missing_until_line);error(ERROR,stringbuf);} YYABORT;}
   | tUNTIL '(' expression ')'
 	       {missing_until--;add_command(cDECIDE,NULL);popgoto();create_break_mark(0,-1);add_command(cBREAK_HERE,NULL);}
   ;
@@ -837,7 +837,7 @@ if_clause: tIF expression {add_command(cDECIDE,NULL);storelabel();pushlabel();}
            endif
   ;
 
-endif: tEOPROG {if (missing_endif) {sprintf(string,"%d endif(s) are missing (last at line %d)",missing_endif,missing_endif_line);error(ERROR,string);} YYABORT;}
+endif: tEOPROG {if (missing_endif) {sprintf(stringbuf,"%d endif(s) are missing (last at line %d)",missing_endif,missing_endif_line);error(ERROR,stringbuf);} YYABORT;}
   | tENDIF {missing_endif--;}
   ;
 
