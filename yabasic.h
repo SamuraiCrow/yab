@@ -138,7 +138,7 @@ extern char *explanation[];  /* explanations of commands */
 extern char **yabargv; /* arguments for yabasic */
 extern int yabargc; /* number of arguments in yabargv */
 extern time_t compilation_start,compilation_end,execution_end;
-extern char *string; /* for trash-strings */
+extern char *stringbuf; /* for trash-strings */
 extern char *errorstring; /* for error-strings */
 extern int errorcode; /* error-codes */
 extern char library_path[]; /* full path to search libraries */

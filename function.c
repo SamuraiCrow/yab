@@ -76,8 +76,8 @@ void token(struct command *cmd) /* extract token from variable */
   line=pop(stSTRING)->pointer;
   sym=get_sym(s->pointer,syARRAY,amSEARCH);
   if (!sym || !sym->pointer) {
-    sprintf(string,"array '%s()' is not defined",strip(s->pointer));
-    error(ERROR,string);
+    sprintf(stringbuf,"array '%s()' is not defined",strip(s->pointer));
+    error(ERROR,stringbuf);
     goto token_done;
   }
   ar=sym->pointer;
@@ -201,8 +201,8 @@ static int do_glob(char *str,char *pat) /* actually do the globbing */
   int res;
   
   if (infolevel>=DEBUG) {
-    sprintf(string,"globbing '%s' on '%s'",str,pat);
-    error(DEBUG,string);
+    sprintf(stringbuf,"globbing '%s' on '%s'",str,pat);
+    error(DEBUG,stringbuf);
   }
   if (*pat=='\0' && *str=='\0') return TRUE;
   else if (*pat=='\0') return FALSE;
@@ -385,20 +385,20 @@ void function(struct command *current,YabInterface* yab) /* performs a function 
     result=stNUMBER;
     break;
   case fSTR:
-    sprintf(string,"%g",a1->value);
-    pointer=my_strdup(string);
+    sprintf(stringbuf,"%g",a1->value);
+    pointer=my_strdup(stringbuf);
     result=stSTRING;
     break;
   case fSTR2:
   case fSTR3:
     result=stSTRING;
-    if (!myformat(string,a1->value,a2->pointer,a3?a3->pointer:NULL)) {
+    if (!myformat(stringbuf,a1->value,a2->pointer,a3?a3->pointer:NULL)) {
       pointer=my_strdup("");
-      sprintf(string,"'%s' is not a valid format",(char *)a2->pointer);
-      error(ERROR,string);
+      sprintf(stringbuf,"'%s' is not a valid format",(char *)a2->pointer);
+      error(ERROR,stringbuf);
       break;
     }
-    pointer=my_strdup(string);
+    pointer=my_strdup(stringbuf);
     break;
   case fSQRT:
     value=sqrt(a1->value);
@@ -534,8 +534,8 @@ void function(struct command *current,YabInterface* yab) /* performs a function 
     pointer=my_malloc(2);
     i=(int)floor(a1->value);
     if (i>255 || i<0) {
-      sprintf(string,"can't convert %g to character",a1->value);
-      error(ERROR,string);
+      sprintf(stringbuf,"can't convert %g to character",a1->value);
+      error(ERROR,stringbuf);
       return;
     }
     pointer[1]='\0';
@@ -708,8 +708,8 @@ void function(struct command *current,YabInterface* yab) /* performs a function 
     i=(int)(a1->value);
     if (badstream(i,0)) return;
     if (!(stream_modes[i] & (smREAD | smWRITE| smREADWRITE))) {
-      sprintf(string,"stream %d not opened",i);
-      error(ERROR,string);
+      sprintf(stringbuf,"stream %d not opened",i);
+      error(ERROR,stringbuf);
       value=0;
     } else {
       value=ftell(streams[i]);
@@ -1003,8 +1003,8 @@ void function(struct command *current,YabInterface* yab) /* performs a function 
   case fSOUND:
  	str=a1->pointer;
     //value=a2->value;
-    //sprintf(string,"stream %s %s not opened",str,value);
-      //error(ERROR,string);
+    //sprintf(stringbuf,"stream %s %s not opened",str,value);
+      //error(ERROR,stringbuf);
     value = sound(str, a2->value, yab, linenum, current->lib->s);
     result = stNUMBER;
     break;
@@ -1117,11 +1117,11 @@ static int do_system2(char *cmd) /* execute command as system */
   start.hStdInput=GetStdHandle(STD_INPUT_HANDLE);
   comspec=getenv("COMSPEC");
   if (!comspec) comspec="command.com";
-  sprintf(string,"%s /C %s",comspec,cmd);
-  if (!CreateProcess(NULL,string,&prosec,&thrsec,TRUE,0,
+  sprintf(stringbuf,"%s /C %s",comspec,cmd);
+  if (!CreateProcess(NULL,stringbuf,&prosec,&thrsec,TRUE,0,
     NULL,NULL,&start,&proc)) {
-    sprintf(string,"couldn't execute '%s'",cmd);
-    error(ERROR,string);
+    sprintf(stringbuf,"couldn't execute '%s'",cmd);
+    error(ERROR,stringbuf);
     return -1;
   }
   WaitForSingleObject(proc.hProcess,INFINITE);
@@ -1192,8 +1192,8 @@ static char *do_system(char *cmd) /* executes command via command.com */
 #ifdef UNIX
   p=popen(cmd,"r");
   if (p==NULL) {
-    sprintf(string,"couldn't execute '%s'",cmd);
-    error(ERROR,string);
+    sprintf(stringbuf,"couldn't execute '%s'",cmd);
+    error(ERROR,stringbuf);
     return my_strdup("");
   }
   do {
@@ -1231,11 +1231,11 @@ static char *do_system(char *cmd) /* executes command via command.com */
 		
   comspec=getenv("COMSPEC");
   if (!comspec) comspec="command.com";
-  sprintf(string,"%s /C %s",comspec,cmd);
-  if (!CreateProcess(NULL,string,&prosec,&thrsec,TRUE,0,
+  sprintf(stringbuf,"%s /C %s",comspec,cmd);
+  if (!CreateProcess(NULL,stringbuf,&prosec,&thrsec,TRUE,0,
     NULL,NULL,&start,&proc)) {
-    sprintf(string,"couldn't execute '%s'",cmd);
-    error(ERROR,string);
+    sprintf(stringbuf,"couldn't execute '%s'",cmd);
+    error(ERROR,stringbuf);
     return my_strdup("");
   }
   CloseHandle(pipewrite);
@@ -1318,8 +1318,8 @@ static double other2dec(char *hex,int base) /* convert hex or binary to double n
   int i,len;
   
   if (base!=2 && base !=16) {
-    sprintf(string,"Cannot convert base-%d numbers",base);
-    error(ERROR,string);
+    sprintf(stringbuf,"Cannot convert base-%d numbers",base);
+    error(ERROR,stringbuf);
     return 0.;
   }
   dec=0;
@@ -1328,8 +1328,8 @@ static double other2dec(char *hex,int base) /* convert hex or binary to double n
     dec*=base;
     found=strchr(digits,tolower(hex[i]));
     if (!found || found-digits>=base) {
-      sprintf(string,"Not a base-%d number: '%s'",base,hex);
-      error(ERROR,string);
+      sprintf(stringbuf,"Not a base-%d number: '%s'",base,hex);
+      error(ERROR,stringbuf);
       return 0.;
     }
     dec+=found-digits;
@@ -1595,8 +1595,8 @@ void poke(struct command *cmd) /* poke into internals */
       return;
     }
     if (infolevel>=DEBUG) {
-      sprintf(string,"switching infolevel to '%c'",c);
-      error(DEBUG,string);
+      sprintf(stringbuf,"switching infolevel to '%c'",c);
+      error(DEBUG,stringbuf);
     }
   }
   else if (!strcmp(dest,"stdout") && sarg) {
@@ -1630,8 +1630,8 @@ void pokefile(struct command *cmd) /* poke into file */
   if (badstream(stream,0)) return;
   
   if (!(stream_modes[stream] & smWRITE)) {
-    sprintf(string,"Stream %d not open for writing",stream);
-    error(ERROR,string);
+    sprintf(stringbuf,"Stream %d not open for writing",stream);
+    error(ERROR,stringbuf);
     return;
   } 
   if (sarg) {
@@ -1690,8 +1690,8 @@ static int peekfile(int stream) /* read a byte from stream */
 {
   if (stream && badstream(stream,0)) return 0;
   if (stream && !(stream_modes[stream] & smREAD | smREADWRITE)) {
-    sprintf(string,"stream %d not open for reading",stream);
-    error(ERROR,string);
+    sprintf(stringbuf,"stream %d not open for reading",stream);
+    error(ERROR,stringbuf);
     return 0;
   } 
   return fgetc(stream?streams[stream]:stdin);
@@ -1827,8 +1827,8 @@ void restore(struct command *cmd) /* reset data pointer to given label */
       label=search_label(cmd->pointer,smLABEL|smGLOBAL);
       if (!label) {
 	/* did not find label */
-	sprintf(string,"can't find label '%s'",(char *)cmd->pointer);
-	error(ERROR,string);
+	sprintf(stringbuf,"can't find label '%s'",(char *)cmd->pointer);
+	error(ERROR,stringbuf);
 	return;
       }
     }

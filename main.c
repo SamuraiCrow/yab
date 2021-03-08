@@ -74,7 +74,7 @@ int is_bound; /* true, if this executable is bound */
 char* appdirectory;
 static char *to_bind=NULL; /* name bound program to be written */
 FILE *bound_program=NULL; /* points to embedded yabasic program (if any) */
-char *string; /* for trash-strings */
+char *stringbuf; /* for trash-strings */
 char *errorstring; /* for error-strings */
 int errorcode; /* error-codes */
 int enterkeyflag = 0; /* press enter to end program */
@@ -122,7 +122,7 @@ int mmain(int argc,char **argv, YabInterface* y)
   // appdirectory=(char *)my_malloc(sizeof(argv[0]));
   // strcpy(appdirectory, argv[0]);
 
-  string=(char *)my_malloc(sizeof(char)*INBUFFLEN);
+  stringbuf=(char *)my_malloc(sizeof(char)*INBUFFLEN);
   errorstring=(char *)my_malloc(sizeof(char)*INBUFFLEN);
   *errorstring='\0';
   errorcode=0;
@@ -229,20 +229,20 @@ int mmain(int argc,char **argv, YabInterface* y)
   if (errorlevel>ERROR) create_docu_array();
 
   add_command(cEND,NULL);
-  sprintf(string,"read %d line(s) and generated %d command(s)",mylineno,commandcount);
-  error(NOTE,string);
+  sprintf(stringbuf,"read %d line(s) and generated %d command(s)",mylineno,commandcount);
+  error(NOTE,stringbuf);
   
   time(&compilation_end);
 
   if (to_bind) {
     struct libfile_name *lib;
     if (mybind(to_bind)) {
-      sprintf(string,"Successfully bound '%s' and '%s' into '%s'",interpreter_path,main_file_name,to_bind);
-      error(INFO,string);
+      sprintf(stringbuf,"Successfully bound '%s' and '%s' into '%s'",interpreter_path,main_file_name,to_bind);
+      error(INFO,stringbuf);
       end_it();
     } else {
-      sprintf(string,"could not bind '%s' and '%s' into '%s'",interpreter_path,main_file_name,to_bind);
-      error(ERROR,string);
+      sprintf(stringbuf,"could not bind '%s' and '%s' into '%s'",interpreter_path,main_file_name,to_bind);
+      error(ERROR,stringbuf);
       end_it();
     }
   }
@@ -259,13 +259,13 @@ int mmain(int argc,char **argv, YabInterface* y)
   }
   
   program_state=FINISHED;
-  sprintf(string,"%d debug(s), %d note(s), %d warning(s), %d error(s)",
+  sprintf(stringbuf,"%d debug(s), %d note(s), %d warning(s), %d error(s)",
 	  debug_count,note_count,warning_count,error_count);
-  error(NOTE,string);
+  error(NOTE,stringbuf);
   time(&execution_end);
-  sprintf(string,"compilation time %g second(s), execution %g",
+  sprintf(stringbuf,"compilation time %g second(s), execution %g",
 	  (double)(compilation_end-compilation_start),(double)(execution_end-compilation_end));
-  error(NOTE,string);
+  error(NOTE,stringbuf);
   end_it();
   return !(errorlevel>ERROR);
 }
@@ -282,7 +282,7 @@ static void std_diag(char *head,int type,char *name) /* produce standard diagnos
   struct stackentry *sp;
   
   if (infolevel>=DEBUG) {
-    s=string;
+    s=stringbuf;
     if (type>cLAST_COMMAND || type<cFIRST_COMMAND) {
       sprintf(s,"%s Illegal %d %n",head,type,&n);
     }
@@ -358,7 +358,7 @@ static void std_diag(char *head,int type,char *name) /* produce standard diagnos
       }
       strcat(s,"]b");
     }
-    error(DEBUG,string);
+    error(DEBUG,stringbuf);
   }
 }
 
@@ -489,8 +489,8 @@ static void parse_arguments(int cargc,char *cargv[])
 	else if (!strncmp(info,"fatal",strlen(info))) infolevel=FATAL;
 	else if (!strncmp(info,"bison",strlen(info))) {yydebug=1;infolevel=DEBUG;}
 	else {
-	  sprintf(string,"there's no infolevel '%s' " YABFORHELP,argv[ar]);
-	  error(ERROR,string);
+	  sprintf(stringbuf,"there's no infolevel '%s' " YABFORHELP,argv[ar]);
+	  error(ERROR,stringbuf);
 	  end_it();
 	}
       }
@@ -578,15 +578,15 @@ static void parse_arguments(int cargc,char *cargv[])
 	  main_file_name=my_strdup(argv[ar+1]);
 	}
       } else if (!print_docu && *option=='-') {
-	sprintf(string,"unknown or ambigous option '%s' " YABFORHELP,option);
-	error(ERROR,string);
+	sprintf(stringbuf,"unknown or ambigous option '%s' " YABFORHELP,option);
+	error(ERROR,stringbuf);
 	end_it();
       } else if (!is_bound && !inputfile && !explicit) { /* not an option */
 	if (!main_file_name) main_file_name=my_strdup(argv[ar]);
 	inputfile=fopen(main_file_name,"r");
 	if (inputfile==NULL) {
-	  sprintf(string,"could not open '%s': %s",main_file_name,my_strerror(errno));
-	  error(ERROR,string);
+	  sprintf(stringbuf,"could not open '%s': %s",main_file_name,my_strerror(errno));
+	  error(ERROR,stringbuf);
 	  endreason=erERROR;
 	  exitcode=1;
 	  end_it();
@@ -697,8 +697,8 @@ void do_help(char *op) /* process help option */
     fprintf(stderr,"                         the program finished\n");
     fprintf(stderr,"\n");
   } else {
-    sprintf(string,"unknown or ambigous option '%s' " YABFORHELP,ooop);
-    error(ERROR,string);
+    sprintf(stringbuf,"unknown or ambigous option '%s' " YABFORHELP,ooop);
+    error(ERROR,stringbuf);
   }
 }
 
@@ -1162,7 +1162,7 @@ static void run_it(YabInterface* yab)
         l++;
         if (hold_docu && !(l%24)) {
 	  printf("---Press RETURN to continue ");
-	  fgets(string,20,stdin);
+	  fgets(stringbuf,20,stdin);
         }
       } else {
 	if (infolevel>=DEBUG) std_diag("skipping",current->type,current->name); 
@@ -1172,7 +1172,7 @@ static void run_it(YabInterface* yab)
     if (!l) printf("---No embbeded documentation\n");
     if (hold_docu) {
       printf("---End of embbedded documentation, press RETURN ");
-      fgets(string,20,stdin);
+      fgets(stringbuf,20,stdin);
     }
   } else {
     while(current!=cmdhead && endreason==erNONE) {
@@ -1655,9 +1655,9 @@ static void run_it(YabInterface* yab)
       case cEXIT:
 	exitcode=(int)pop(stNUMBER)->value;endreason=erREQUEST; break;
       default:
-	sprintf(string,"Command %s (%d, right before '%s') not implemented",
+	sprintf(stringbuf,"Command %s (%d, right before '%s') not implemented",
 		explanation[current->type],current->type,explanation[current->type+1]);
-	error(ERROR,string);
+	error(ERROR,stringbuf);
       }
     }
   }
@@ -1800,8 +1800,8 @@ void *my_malloc(unsigned num) /* Alloc memory and issue warning on failure */
   
   room=malloc(num+sizeof(int));
   if (room==NULL) {
-    sprintf(string,"Can't malloc %d bytes of memory",num);
-    error(FATAL,string);
+    sprintf(stringbuf,"Can't malloc %d bytes of memory",num);
+    error(FATAL,stringbuf);
   }
   return room;
 }
@@ -1923,11 +1923,11 @@ void compile() /* create s subroutine at runtime */
 }
 
 
-void create_execute(int string) /* create command 'cEXECUTESUB' */
+void create_execute(int stringbuf) /* create command 'cEXECUTESUB' */
 {
   struct command *cmd;
   
-  cmd=add_command(string?cEXECUTE2:cEXECUTE,NULL);
+  cmd=add_command(stringbuf?cEXECUTE2:cEXECUTE,NULL);
   cmd->pointer=my_strdup(dotify("",FALSE));
 }
 
@@ -1948,10 +1948,10 @@ void execute(struct command *cmd) /* execute a subroutine */
   shortname=st->pointer;
   if ((shortname[strlen(shortname)-1]=='$')!=(cmd->type==cEXECUTE2)) {
     if (cmd->type==cEXECUTE2) 
-      sprintf(string,"expecting the name of a string function (not '%s')",shortname);
+      sprintf(stringbuf,"expecting the name of a string function (not '%s')",shortname);
     else
-      sprintf(string,"expecting the name of a numeric function (not '%s')",shortname);
-    error(ERROR,string);
+      sprintf(stringbuf,"expecting the name of a numeric function (not '%s')",shortname);
+    error(ERROR,stringbuf);
     return;
   }
   fullname=my_malloc(strlen(cmd->pointer)+strlen(shortname)+2);
@@ -1961,8 +1961,8 @@ void execute(struct command *cmd) /* execute a subroutine */
   st->type=stFREE;
   newcurr=search_label(fullname,smSUB);
   if (!newcurr) {
-    sprintf(string,"subroutine '%s' not defined",fullname);
-    error(ERROR,string);
+    sprintf(stringbuf,"subroutine '%s' not defined",fullname);
+    error(ERROR,stringbuf);
     return;
   }
   ret=push();
@@ -2021,8 +2021,8 @@ int isbound(void) /* check if this interpreter is bound to a program */
     return 0;
   }
   if (!(interpreter=fopen(interpreter_path,"r"))) {
-    sprintf(string,"Couldn't open '%s' to check, if it is bound: %s",interpreter_path,my_strerror(errno));
-    error(WARNING,string);
+    sprintf(stringbuf,"Couldn't open '%s' to check, if it is bound: %s",interpreter_path,my_strerror(errno));
+    error(WARNING,stringbuf);
     return 0;
   }
 
@@ -2042,14 +2042,14 @@ int isbound(void) /* check if this interpreter is bound to a program */
     return 0;
   }
   if (!(interpreter=fopen(interpreter_path,"r"))) {
-    sprintf(string,"Couldn't open '%s' to check, if it is bound: %s",interpreter_path,my_strerror(errno));
-    error(WARNING,string);
+    sprintf(stringbuf,"Couldn't open '%s' to check, if it is bound: %s",interpreter_path,my_strerror(errno));
+    error(WARNING,stringbuf);
     return 0;
   }
 
   if (fseek(interpreter,0-strlen(YABMAGIC)-1,SEEK_END)) {
-    sprintf(string,"Couldn't seek within '%s': %s",interpreter_path,my_strerror(errno));
-    error(WARNING,string);
+    sprintf(stringbuf,"Couldn't seek within '%s': %s",interpreter_path,my_strerror(errno));
+    error(WARNING,stringbuf);
     return 0;
   }
   for(i=0;i<strlen(YABMAGIC);i++) {
@@ -2062,8 +2062,8 @@ int isbound(void) /* check if this interpreter is bound to a program */
   }
   
   if (fseek(interpreter,0-strlen(YABMAGIC)-5-8-1,SEEK_END)) {
-    sprintf(string,"Couldn't seek within '%s': %s",interpreter_path,my_strerror(errno));
-    error(WARNING,string);
+    sprintf(stringbuf,"Couldn't seek within '%s': %s",interpreter_path,my_strerror(errno));
+    error(WARNING,stringbuf);
     return 0;
   }
   if (!fscanf(interpreter,"%d",&proglen)) {
@@ -2072,8 +2072,8 @@ int isbound(void) /* check if this interpreter is bound to a program */
   }
 
   if (fseek(interpreter,0-strlen(YABMAGIC)-5-8-5-5-proglen,SEEK_END)) {
-    sprintf(string,"Couldn't seek within '%s': %s",interpreter_path,my_strerror(errno));
-    error(WARNING,string);
+    sprintf(stringbuf,"Couldn't seek within '%s': %s",interpreter_path,my_strerror(errno));
+    error(WARNING,stringbuf);
     return 0;
   }
 
@@ -2087,8 +2087,8 @@ int isbound(void) /* check if this interpreter is bound to a program */
     }
     error(NOTE,"End of program, that will be executed");
     if (fseek(interpreter,0-strlen(YABMAGIC)-5-8-5-5-proglen,SEEK_END)) {
-      sprintf(string,"Couldn't seek within '%s': %s",interpreter_path,my_strerror(errno));
-      error(WARNING,string);
+      sprintf(stringbuf,"Couldn't seek within '%s': %s",interpreter_path,my_strerror(errno));
+      error(WARNING,stringbuf);
       return 0;
     }
   }
@@ -2114,38 +2114,38 @@ static int mybind(char *bound) /* bind a program to the interpreter and save it 
   }
 
   if (!strcmp(interpreter_path,bound)) {
-    sprintf(string,"will not overwrite '%s' with '%s'",bound,interpreter_path);
-    error(ERROR,string);
+    sprintf(stringbuf,"will not overwrite '%s' with '%s'",bound,interpreter_path);
+    error(ERROR,stringbuf);
     return 0;
   }
   if (!strcmp(main_file_name,bound)) {
-    sprintf(string,"will not overwrite '%s' with '%s'",bound,main_file_name);
-    error(ERROR,string);
+    sprintf(stringbuf,"will not overwrite '%s' with '%s'",bound,main_file_name);
+    error(ERROR,stringbuf);
     return 0;
   }
 
   if (!(fyab=fopen(interpreter_path,"rb"))) {
-    sprintf(string,"could not open '%s' for reading: %s",interpreter_path,my_strerror(errno));
-    error(ERROR,string);
+    sprintf(stringbuf,"could not open '%s' for reading: %s",interpreter_path,my_strerror(errno));
+    error(ERROR,stringbuf);
     return 0;
   }
   if (!(fprog=fopen(main_file_name,"rb"))) {
-    sprintf(string,"could not open '%s' for reading: %s",main_file_name,my_strerror(errno));
-    error(ERROR,string);
+    sprintf(stringbuf,"could not open '%s' for reading: %s",main_file_name,my_strerror(errno));
+    error(ERROR,stringbuf);
     fclose(fyab);
     return 0;
   }
   if (!(fbound=fopen(bound,"wb"))) {
-    sprintf(string,"could not open '%s' for writing: %s",bound,my_strerror(errno));
-    error(ERROR,string);
+    sprintf(stringbuf,"could not open '%s' for writing: %s",bound,my_strerror(errno));
+    error(ERROR,stringbuf);
     fclose(fyab);
     fclose(fprog);
     return 0;
   }
 
   if (infolevel>=DEBUG) {
-    sprintf(string,"binding %s and %s into %s",interpreter_path,main_file_name,bound);
-    error(NOTE,string);
+    sprintf(stringbuf,"binding %s and %s into %s",interpreter_path,main_file_name,bound);
+    error(NOTE,stringbuf);
   }
   
   while((c=fgetc(fyab))!=EOF) {
@@ -2153,13 +2153,13 @@ static int mybind(char *bound) /* bind a program to the interpreter and save it 
   }
   for (i=1;i<libfile_chain_length;i++) {
      if (!(flib=fopen(libfile_chain[i]->l,"rb"))) {
-      sprintf(string,"could not open '%s' for reading: %s",libfile_chain[i]->l,my_strerror(errno));
-      error(ERROR,string);
+      sprintf(stringbuf,"could not open '%s' for reading: %s",libfile_chain[i]->l,my_strerror(errno));
+      error(ERROR,stringbuf);
       fclose(flib);
       return 0;
     }
-    sprintf(string,"\nimport %s\n",libfile_chain[i]->s);
-    for (pc=string;*pc;pc++) {
+    sprintf(stringbuf,"\nimport %s\n",libfile_chain[i]->s);
+    for (pc=stringbuf;*pc;pc++) {
       fputc(*pc,fbound);
       proglen++;
     }

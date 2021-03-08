@@ -97,8 +97,8 @@ void popsymlist(void) /* pop list of symbols and free symbol contents */
     currsym=nextsym;
   }
   if (infolevel>=DEBUG) {
-    sprintf(string,"removed symbol list with %d symbols",count);
-    error(DEBUG,string);
+    sprintf(stringbuf,"removed symbol list with %d symbols",count);
+    error(DEBUG,stringbuf);
   }
   prevstack=symhead->prev_in_stack;
   my_free(symhead);
@@ -114,21 +114,21 @@ static void freesym(struct symbol *s) /* free contents of symbol */
 
   struct array *ar;
   if (s->link) { /* it's a link, don't remove memory */
-    sprintf(string,"removing linked symbol '%s'",s->name);
-    error(DEBUG,string);
+    sprintf(stringbuf,"removing linked symbol '%s'",s->name);
+    error(DEBUG,stringbuf);
     my_free(s->name);
     return; 
   }
   if (s->type==sySTRING) {
     if (infolevel>=DEBUG) {
-      sprintf(string,"removing string symbol '%s'",s->name);
-      error(DEBUG,string);
+      sprintf(stringbuf,"removing string symbol '%s'",s->name);
+      error(DEBUG,stringbuf);
     }
     my_free(s->pointer);
   } else if (s->type==syARRAY) {
     if (infolevel>=DEBUG) {
-      sprintf(string,"removing array symbol '%s()'",s->name);
-      error(DEBUG,string);
+      sprintf(stringbuf,"removing array symbol '%s()'",s->name);
+      error(DEBUG,stringbuf);
     }
     ar=s->pointer;
     if (ar->dimension>0) {
@@ -143,8 +143,8 @@ static void freesym(struct symbol *s) /* free contents of symbol */
     my_free(ar);
   } else if (s->type==syNUMBER) {
     if (infolevel>=DEBUG) {
-      sprintf(string,"removing numeric symbol '%s'",s->name);
-      error(DEBUG,string);
+      sprintf(stringbuf,"removing numeric symbol '%s'",s->name);
+      error(DEBUG,stringbuf);
     }
   }
   my_free(s->name);
@@ -163,8 +163,8 @@ void clearrefs(struct command *cmd) /* clear references for commands within func
     curr->symbol=NULL;
     curr=curr->nextref;
   }
-  sprintf(string,"removed references from %d symbols",n);
-  error(DEBUG,string);
+  sprintf(stringbuf,"removed references from %d symbols",n);
+  error(DEBUG,stringbuf);
 }
 
 
@@ -196,12 +196,12 @@ struct symbol *get_sym(char *name,int type,int add)
 	}
 	if (infolevel>=DEBUG) {
 	  if (linked)
-	    sprintf(string,"found symbol '%s%s', linked to %s after searching %d symbol(s) in %d stack(s)",
+	    sprintf(stringbuf,"found symbol '%s%s', linked to %s after searching %d symbol(s) in %d stack(s)",
 		    name,(type==syARRAY)?"()":"",(*currsym)->name,symbolcount,stackcount);
 	  else
-	    sprintf(string,"found symbol '%s%s' after searching %d symbol(s) in %d stack(s)",
+	    sprintf(stringbuf,"found symbol '%s%s' after searching %d symbol(s) in %d stack(s)",
 		    name,(type==syARRAY)?"()":"",symbolcount,stackcount);
-	  error(DEBUG,string);
+	  error(DEBUG,stringbuf);
 	}
 	return *currsym; /* give back address */
       }
@@ -213,8 +213,8 @@ struct symbol *get_sym(char *name,int type,int add)
       new=create_symbol(type,name);
       (*currsym)=new;
       if (infolevel>=DEBUG) {
-	sprintf(string,"created local symbol %s%s",name,(type==syARRAY)?"()":"");
-	error(DEBUG,string);
+	sprintf(stringbuf,"created local symbol %s%s",name,(type==syARRAY)?"()":"");
+	error(DEBUG,stringbuf);
       }
       return new;
     }
@@ -227,8 +227,8 @@ struct symbol *get_sym(char *name,int type,int add)
     new=create_symbol(type,name);
     (*currsym)=new;
     if (infolevel>=DEBUG) {
-      sprintf(string,"created global symbol %s%s",name,(type==syARRAY)?"()":"");
-      error(DEBUG,string);
+      sprintf(stringbuf,"created global symbol %s%s",name,(type==syARRAY)?"()":"");
+      error(DEBUG,stringbuf);
     }
     return new;
   }
@@ -239,8 +239,8 @@ struct symbol *get_sym(char *name,int type,int add)
 void link_symbols(struct symbol *from,struct symbol *to) { /* link one symbol to the other */
   from->link=to;
   if (infolevel>=DEBUG) {
-    sprintf(string,"linking symbol '%s' to '%s'",from->name,to->name);
-    error(DEBUG,string);
+    sprintf(stringbuf,"linking symbol '%s' to '%s'",from->name,to->name);
+    error(DEBUG,stringbuf);
   }
 }
 
@@ -274,19 +274,19 @@ void retval(struct command *cmd) /* check return value of function */
       s->pointer=my_strdup("");
     }
   } else {
-    sprintf(string,"subroutine returns %s but should return %s",
+    sprintf(stringbuf,"subroutine returns %s but should return %s",
 	    (is==ftSTRING)?"a string":"a number",(should==ftSTRING)?"a string":"a number");
-    error(ERROR,string);
+    error(ERROR,stringbuf);
   }
   if (infolevel>=DEBUG) {
     s=stackhead->prev;
     if (s->type==stNUMBER) 
-      sprintf(string,"subroutine returns number %g",s->value);
+      sprintf(stringbuf,"subroutine returns number %g",s->value);
     else if (s->type==stSTRING)
-      sprintf(string,"subroutine returns string '%s'",(char *)s->pointer);
+      sprintf(stringbuf,"subroutine returns string '%s'",(char *)s->pointer);
     else
-      sprintf(string,"subroutine returns something strange (%d)",s->type);
-    error(DEBUG,string);
+      sprintf(stringbuf,"subroutine returns something strange (%d)",s->type);
+    error(DEBUG,stringbuf);
   }
   swap();
 }
@@ -311,20 +311,20 @@ void dump_sym(void) /* dump the stack of lists of symbols */
   currstack=symhead;
   while(currstack) {   /* search 'til last element of stack */
     currsym=&(currstack->next_in_list);
-    string[0]='\0';
+    stringbuf[0]='\0';
     while(*currsym) {
       switch((*currsym)->type) {
-      case sySTRING: strcat(string," STRING:"); break;
-      case syNUMBER: strcat(string," NUMBER:"); break;
-      case syFREE: strcat(string," FREE:"); break;
-      case syARRAY: strcat(string," ARRAY:"); break;
-      default:sprintf(string," UNKNOWN:"); break;
+      case sySTRING: strcat(stringbuf," STRING:"); break;
+      case syNUMBER: strcat(stringbuf," NUMBER:"); break;
+      case syFREE: strcat(stringbuf," FREE:"); break;
+      case syARRAY: strcat(stringbuf," ARRAY:"); break;
+      default:sprintf(stringbuf," UNKNOWN:"); break;
       }
-      strcat(string,(*currsym)->name);
+      strcat(stringbuf,(*currsym)->name);
 
       currsym=&((*currsym)->next_in_list); /* try next entry */
     }
-    error(DUMP,string);
+    error(DUMP,stringbuf);
     currstack=currstack->prev_in_stack;
   } 
   error(DUMP,"root of symbol stack");
@@ -344,8 +344,8 @@ void dump_sub(int short_dump) /* dump the stack of subroutine calls */
 	char *dot;
 	dot=strchr(cmd->pointer,'.');
 	if (first && !short_dump) error(DUMP,"Executing in:");
-	sprintf(string,"sub %s() called in %s,%d",dot ? (dot+1):cmd->pointer,cmd->lib->l,cmd->line);
-	error(DUMP,string);
+	sprintf(stringbuf,"sub %s() called in %s,%d",dot ? (dot+1):cmd->pointer,cmd->lib->l,cmd->line);
+	error(DUMP,stringbuf);
 	first=FALSE;
       }
     }
@@ -462,7 +462,7 @@ struct stackentry *pop(int etype)
   /* expected and found don't match */
   stackdesc(etype,expected);
   stackdesc(ftype,found);
-  sprintf(string,"expected %s but found %s",expected,found);
+  sprintf(stringbuf,"expected %s but found %s",expected,found);
   if (etype==stNUMBER || etype==stSTRING || etype==stSTRING_OR_NUMBER) {
     s=push();
     if (etype==stNUMBER) {
@@ -472,10 +472,10 @@ struct stackentry *pop(int etype)
       s->type=stSTRING;
       s->pointer=my_strdup("");
     }      
-    error(ERROR,string);
+    error(ERROR,stringbuf);
     return s;
   } else {
-    error(FATAL,string);
+    error(FATAL,stringbuf);
   }
   return stackhead;
 }
@@ -633,8 +633,8 @@ void create_makelocal(char *name,int type) /* create command 'cMAKELOCAL' */
 void makelocal(struct command *cmd) /* makes symbol local */
 {
   if (get_sym(cmd->name,cmd->args,amSEARCH_VERY_LOCAL)) {
-    sprintf(string,"local variable '%s' already defined within this subroutine",strip(cmd->name));
-    error(ERROR,string);
+    sprintf(stringbuf,"local variable '%s' already defined within this subroutine",strip(cmd->name));
+    error(ERROR,stringbuf);
     return;
   }
   get_sym(cmd->name,cmd->args,amADD_LOCAL);
@@ -679,8 +679,8 @@ void makestatic(struct command *cmd) /* makes symbol static */
   if ((at=strchr(cmd->name,'@'))!=NULL) *at='\0';
 
   if (get_sym(cmd->name,cmd->args,amSEARCH_VERY_LOCAL)) {
-    sprintf(string,"static variable '%s' already defined within this subroutine",strip(cmd->name));
-    error(ERROR,string);
+    sprintf(stringbuf,"static variable '%s' already defined within this subroutine",strip(cmd->name));
+    error(ERROR,stringbuf);
     return;
   }
 
@@ -713,8 +713,8 @@ void arraylink(struct command *cmd) /* link a local symbol to a global array */
   struct array *ar;
   
   if (get_sym(cmd->name,cmd->args,amSEARCH_VERY_LOCAL)) {
-    sprintf(string,"'%s()' already defined within this subroutine",strip(cmd->name));
-    error(ERROR,string);
+    sprintf(stringbuf,"'%s()' already defined within this subroutine",strip(cmd->name));
+    error(ERROR,stringbuf);
     return;
   }
   /* get globally defined array */
@@ -727,8 +727,8 @@ void arraylink(struct command *cmd) /* link a local symbol to a global array */
     ar=create_array((cmd->args==stNUMBERARRAYREF)?'d':'s',0);
     l->pointer=ar;
     if (infolevel>=DEBUG) {
-      sprintf(string,"creating 0-dimensional dummy array '%s()'",cmd->name);
-      error(DEBUG,string);
+      sprintf(stringbuf,"creating 0-dimensional dummy array '%s()'",cmd->name);
+      error(DEBUG,stringbuf);
     }
   } else {
     /* link those two together */
@@ -816,8 +816,8 @@ void require(struct command *cmd) /* check, that item on stack has right type */
   else
     expected="something strange";
 
-  sprintf(string,"invalid subroutine call: %s expected, %s supplied",expected,supplied);
-  error(ERROR,string);
+  sprintf(stringbuf,"invalid subroutine call: %s expected, %s supplied",expected,supplied);
+  error(ERROR,stringbuf);
 }
 
 
@@ -848,8 +848,8 @@ void dblbin(struct command *cmd) /* compute with two numbers from stack */
   case(cDBLMUL):c=a*b; break;
   case(cDBLDIV): 
     if (fabs(b)<DBL_MIN) {
-      sprintf(string,"Division by zero, set to %g",DBL_MAX);
-      error(NOTE,string);
+      sprintf(stringbuf,"Division by zero, set to %g",DBL_MAX);
+      error(NOTE,stringbuf);
       c=DBL_MAX;}
     else
       c=a/b;
@@ -1034,9 +1034,9 @@ void jump(struct command *cmd)
   }
   label=search_label(cmd->pointer,smSUB|smLINK|smLABEL);
   if (!label && type==cCALL && (dot=strchr(cmd->pointer,'.'))) {
-    strcpy(string,"main");
-    strcat(string,dot);
-    label=search_label(string,smLINK);
+    strcpy(stringbuf,"main");
+    strcat(stringbuf,dot);
+    label=search_label(stringbuf,smLINK);
   }
   if (label) {
       /* found right label */
@@ -1050,9 +1050,9 @@ void jump(struct command *cmd)
     }
   } else {
     /* label not found */
-    sprintf(string,"can't find %s '%s'",(type==cCALL)?"subroutine":"label",strip((char *)cmd->pointer));
-    if (strchr(cmd->pointer,'@')) strcat(string," (not in this sub)");
-    error(ERROR,string);
+    sprintf(stringbuf,"can't find %s '%s'",(type==cCALL)?"subroutine":"label",strip((char *)cmd->pointer));
+    if (strchr(cmd->pointer,'@')) strcat(stringbuf," (not in this sub)");
+    error(ERROR,stringbuf);
   }
 
   /* check, if goto enters or leaves a switch_statement */
@@ -1141,8 +1141,8 @@ void create_label(char *label,int type) /* creates command label */
   
   /* check, if label is duplicate */
   if (search_label(label,smSUB|smLINK|smLABEL)) {
-    sprintf(string,"duplicate %s '%s'",(type==cLABEL)?"label":"subroutine",strip(label));
-    error(ERROR,string);
+    sprintf(stringbuf,"duplicate %s '%s'",(type==cLABEL)?"label":"subroutine",strip(label));
+    error(ERROR,stringbuf);
     return;
   }
   
@@ -1166,8 +1166,8 @@ void create_sublink(char *label) /* create link to subroutine */
   
   /* check, if label is duplicate */
   if (search_label(global,smSUB|smLINK|smLABEL)) {
-    sprintf(string,"duplicate subroutine '%s'",strip(global));
-    error(ERROR,string);
+    sprintf(stringbuf,"duplicate subroutine '%s'",strip(global));
+    error(ERROR,stringbuf);
     return;
   }
 
@@ -1212,8 +1212,8 @@ void dim(struct command *cmd) /* get room for array */
   }
   s=get_sym(cmd->name,syARRAY,local?amADD_LOCAL:amADD_GLOBAL);
   if (search_label(cmd->name,smSUB|smLINK)) {
-    sprintf(string,"array '%s()' conflicts with user subroutine",strip(cmd->name));
-    error(ERROR,string);
+    sprintf(stringbuf,"array '%s()' conflicts with user subroutine",strip(cmd->name));
+    error(ERROR,stringbuf);
     return;
   }
 
@@ -1226,9 +1226,9 @@ void dim(struct command *cmd) /* get room for array */
   if (oar) {
     /* check, if old and new array are compatible */
     if (cmd->args!=oar->dimension) {
-      sprintf(string,"cannot change dimension of '%s()' from %d to %d",
+      sprintf(stringbuf,"cannot change dimension of '%s()' from %d to %d",
 	      strip(cmd->name),oar->dimension,cmd->args);
-      error(ERROR,string);
+      error(ERROR,stringbuf);
     }
   }
   /* check, if redim is actually needed */
@@ -1237,8 +1237,8 @@ void dim(struct command *cmd) /* get room for array */
   for(i=0;i<cmd->args;i++) {
     nbounds[i]=1+(int)pop(stNUMBER)->value;
     if (nbounds[i]<=1) {
-      sprintf(string,"array index %d is less or equal zero",cmd->args-i);
-      error(ERROR,string);
+      sprintf(stringbuf,"array index %d is less or equal zero",cmd->args-i);
+      error(ERROR,stringbuf);
       return;
     }
     if (oar) {
@@ -1350,8 +1350,8 @@ void query_array(struct command *cmd) /* query array */
   if (!cmd->symbol) {
     sym=get_sym(s->pointer,syARRAY,amSEARCH);
     if (!sym || !sym->pointer) {
-      sprintf(string,"array '%s()' is not defined",strip(s->pointer));
-      error(ERROR,string);
+      sprintf(stringbuf,"array '%s()' is not defined",strip(s->pointer));
+      error(ERROR,stringbuf);
       return;
     }
     cmd->symbol=sym;
@@ -1360,8 +1360,8 @@ void query_array(struct command *cmd) /* query array */
   ar=((struct symbol *)cmd->symbol)->pointer;
 
   if (cmd->type==cARSIZE && (index<1 || index>ar->dimension)) {
-    sprintf(string,"only indices between 1 and %d allowed",ar->dimension);
-    error(ERROR,string);
+    sprintf(stringbuf,"only indices between 1 and %d allowed",ar->dimension);
+    error(ERROR,stringbuf);
     return;
   }
   s=push();
@@ -1399,8 +1399,8 @@ void doarray(struct command *cmd) /* call an array */
   if (!cmd->symbol) {
     sym=get_sym(cmd->name,syARRAY,amSEARCH);
     if (!sym || !sym->pointer) {
-      sprintf(string,"'%s()' is neither array nor subroutine",strip(cmd->name));
-      error(ERROR,string);
+      sprintf(stringbuf,"'%s()' is neither array nor subroutine",strip(cmd->name));
+      error(ERROR,stringbuf);
       return;
     }
     cmd->symbol=sym;
@@ -1426,13 +1426,13 @@ void doarray(struct command *cmd) /* call an array */
   ar=((struct symbol *)cmd->symbol)->pointer;
 
   if (!ar->dimension) {
-    sprintf(string,"array parameter '%s()' has not been supplied",strip(cmd->name));
-    error(ERROR,string);
+    sprintf(stringbuf,"array parameter '%s()' has not been supplied",strip(cmd->name));
+    error(ERROR,stringbuf);
     return;
   }
   if (cmd->args!=ar->dimension) {
-    sprintf(string,"%d indices supplied, %d expected for '%s()'",cmd->args,ar->dimension,strip(cmd->name));
-    error(ERROR,string);
+    sprintf(stringbuf,"%d indices supplied, %d expected for '%s()'",cmd->args,ar->dimension,strip(cmd->name));
+    error(ERROR,stringbuf);
     return;
   }
 
@@ -1443,8 +1443,8 @@ void doarray(struct command *cmd) /* call an array */
     bnd=(ar->bounds[i]);
     j=(int)pop(stNUMBER)->value;
     if (j<0 || j>=bnd) {
-      sprintf(string,"index %d (=%d) out of range",ar->dimension-i,j);
-      error(ERROR,string);
+      sprintf(stringbuf,"index %d (=%d) out of range",ar->dimension-i,j);
+      error(ERROR,stringbuf);
       return;
     }
     index+=j*cur;
@@ -1694,8 +1694,8 @@ void mybreak(struct command *cmd) /* find break_here statement */
       if (!major_nesting) minor_nesting+=minor;
       major_nesting+=major;
       if (infolevel>=DEBUG) {
-	sprintf(string,"searching break-mark: diff(%d,%d), total(%d,%d)",minor,major,minor_nesting,major_nesting);
-	error(DEBUG,string);
+	sprintf(stringbuf,"searching break-mark: diff(%d,%d), total(%d,%d)",minor,major,minor_nesting,major_nesting);
+	error(DEBUG,stringbuf);
       }
     }
     curr=curr->next;

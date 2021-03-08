@@ -185,30 +185,30 @@ void print(struct command *cmd) /* print on screen */
       break;
 #endif
     } else {
-      string[0]='\n';
+      stringbuf[0]='\n';
       if (abs(currstr)==lprstream) {
-	string[1]='\r';
-	string[2]='\0';
+	stringbuf[1]='\r';
+	stringbuf[2]='\0';
       } else {
-	string[1]='\0';
+	stringbuf[1]='\0';
       }
     }
-    onestring(string);
+    onestring(stringbuf);
     break;
   case 't':  /* print tab */
-    string[0]='\t';
-    string[1]='\0';
-    onestring(string);
+    stringbuf[0]='\t';
+    stringbuf[1]='\0';
+    onestring(stringbuf);
     break;
   case 'd':  /* print double value */
     p=pop(stNUMBER);
     d=p->value;
     n=(int)d;
     if (n==d && d<LONG_MAX && d>LONG_MIN)
-      sprintf(string,"%s%ld",(last=='d')?" ":"",n);
+      sprintf(stringbuf,"%s%ld",(last=='d')?" ":"",n);
     else
-      sprintf(string,"%s%g",(last=='d')?" ":"",d);
-    onestring(string);
+      sprintf(stringbuf,"%s%g",(last=='d')?" ":"",d);
+    onestring(stringbuf);
     break;
   case 'U':
     r=pop(stSTRING);    
@@ -216,17 +216,17 @@ void print(struct command *cmd) /* print on screen */
     p=pop(stSTRING);
     q=pop(stNUMBER);
     type='d';
-    s=string;
+    s=stringbuf;
     if (last=='d') {
       *s=' ';
       s++;
     }
     if (!myformat(s,q->value,p->pointer,r?r->pointer:NULL)) {
-      sprintf(string,"'%s' is not a valid format",(char *)p->pointer);
-      error(ERROR,string);
+      sprintf(stringbuf,"'%s' is not a valid format",(char *)p->pointer);
+      error(ERROR,stringbuf);
       break;
     }
-    onestring(string);
+    onestring(stringbuf);
     break;
   case 's': 
     p=pop(stSTRING);
@@ -553,14 +553,14 @@ static int is_valid_key(INPUT_RECORD *rec) /* check if input rec contains valid 
 #endif
 
 
-char *replace(char *string) /* replace \n,\a, etc. */
+char *replace(char *stringbuf) /* replace \n,\a, etc. */
 {
   char *from,*to;
   char *p;
   int val;
   static char *hexdigits="0123456789abcdef";
 
-  from=to=string;
+  from=to=stringbuf;
   while(*from) {
     if (*from=='\\') {
       from++;
@@ -601,7 +601,7 @@ char *replace(char *string) /* replace \n,\a, etc. */
     to++;
   }
   *to='\0';
-  return string;
+  return stringbuf;
 }
 
 
@@ -774,8 +774,8 @@ void myclose(void) /* close the specified stream */
   
   if (abs(s)==STDIO_STREAM || badstream(s,0)) return;
   if (stream_modes[s]==smCLOSED) {
-    sprintf(string,"stream %d already closed",s);
-    error(WARNING,string);
+    sprintf(stringbuf,"stream %d already closed",s);
+    error(WARNING,stringbuf);
     return;
   }
   
@@ -866,8 +866,8 @@ void push_switch(struct command *cmd) /* push current stream on stack and switch
   s->type=stNUMBER;
   s->value=oldstream;
   if (infolevel>=DEBUG) {
-    sprintf(string,"pushing %d on stack, switching to %d",oldstream,stream);
-    error(DEBUG,string);
+    sprintf(stringbuf,"pushing %d on stack, switching to %d",oldstream,stream);
+    error(DEBUG,stringbuf);
   }
   oldstream=stream;
   myswitch(stream);
@@ -880,8 +880,8 @@ void pop_switch(void) /* pop current stream from stack and switch to it */
 
   stream=(int)pop(stNUMBER)->value;
   if (infolevel>=DEBUG) {
-    sprintf(string,"popping %d from stack, switching to it",stream);
-    error(DEBUG,string);
+    sprintf(stringbuf,"popping %d from stack, switching to it",stream);
+    error(DEBUG,stringbuf);
   }
   myswitch(stream);
 }
@@ -919,13 +919,13 @@ int checkstream(void)  /* test if currst is still valid */
 
   if (!stdio) {
     if (input && !(stream_modes[abs(currstr)] & smREAD| smREADWRITE)) {
-      sprintf(string,"stream %d not open for reading",abs(currstr));
-      error(ERROR,string);
+      sprintf(stringbuf,"stream %d not open for reading",abs(currstr));
+      error(ERROR,stringbuf);
       return FALSE;
     }
     if (!input && !(stream_modes[abs(currstr)] & (smWRITE | smPRINT))) {
-      sprintf(string,"stream %d not open for writing or printing",abs(currstr));
-      error(ERROR,string);
+      sprintf(stringbuf,"stream %d not open for writing or printing",abs(currstr));
+      error(ERROR,stringbuf);
       return FALSE;
     }
   }
@@ -965,11 +965,11 @@ void testeof(struct command *cmd) /* close the specified stream */
 int badstream(int stream,int errcode) /* test for valid stream id */
 {
   if (stream!=STDIO_STREAM && (stream>FOPEN_MAX-4 || stream<=0)) {
-    sprintf(errcode?errorstring:string,"invalid stream: %d (can handle only streams from 1 to %d)",stream,FOPEN_MAX-4);
+    sprintf(errcode?errorstring:stringbuf,"invalid stream: %d (can handle only streams from 1 to %d)",stream,FOPEN_MAX-4);
     if (errcode) 
       errorcode=errcode;
     else
-      error(ERROR,string);
+      error(ERROR,stringbuf);
     return TRUE;
   }
   return FALSE;
@@ -1257,15 +1257,15 @@ void colour(struct command *cmd) /* switch on colour */
     }
     fc=name2yc(fore);
     if (fc<0) {
-      sprintf(string,"unknown foreground colour: '%s'",fore);
-      error(ERROR,string);
+      sprintf(stringbuf,"unknown foreground colour: '%s'",fore);
+      error(ERROR,stringbuf);
     }
     bc=stdbc;
     if (back) {
       bc=name2yc(back);
       if (fc<0) {
-	sprintf(string,"unknown background colour: '%s'",back);
-	error(ERROR,string);
+	sprintf(stringbuf,"unknown background colour: '%s'",back);
+	error(ERROR,stringbuf);
       }
     }
 #ifdef UNIX
